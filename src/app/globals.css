@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gradient-to-b from-brand-pink via-white to-brand-pink/30 text-brand-charcoal antialiased;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-brand-pink/50 backdrop-blur-xl border border-brand-pink-accent/30 shadow-glass;
+  }
+}

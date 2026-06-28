@@ -1,0 +1,18 @@
+{
+  "name": "Royaale Luxe",
+  "short_name": "Royaale",
+  "description": "Ultra-luxury Saint Lucia fashion",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdf2f8",
+  "theme_color": "#f9a8d4",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
