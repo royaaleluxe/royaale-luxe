@@ -1,11 +1,9 @@
-import type { Metadata } from "next";
-import { AdminAuthProvider } from "@/context/AdminAuthProvider";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Admin Portal | Royaale Luxe",
-  robots: { index: false, follow: false },
-};
+import type { ReactNode } from "react";
+import { AuthProvider } from "@/context/AuthContext";
+import { adminAuth } from "@/lib/firebase";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <AdminAuthProvider>{children}</AdminAuthProvider>;
+export default function AdminPortalLayout({ children }: { children: ReactNode }) {
+  return <AuthProvider authInstance={adminAuth}>{children}</AuthProvider>;
 }

@@ -643,14 +643,15 @@ export async function fetchOrdersForUser(
 
 export function subscribeUserProfile(
   uid: string,
-  callback: (profile: UserProfile | null) => void
+  callback: (profile: UserProfile | null) => void,
+  firestore: Firestore | null = db
 ): Unsubscribe {
-  if (!db) {
+  if (!firestore) {
     callback(null);
     return () => {};
   }
   return onSnapshot(
-    doc(db, "users", uid),
+    doc(firestore, "users", uid),
     (snap) => {
       callback(snap.exists() ? normalizeUserProfile(snap.id, snap.data()) : null);
     },
@@ -661,13 +662,17 @@ export function subscribeUserProfile(
   );
 }
 
-export function subscribeIsAdmin(uid: string, callback: (isAdmin: boolean) => void): Unsubscribe {
-  if (!db) {
+export function subscribeIsAdmin(
+  uid: string,
+  callback: (isAdmin: boolean) => void,
+  firestore: Firestore | null = db
+): Unsubscribe {
+  if (!firestore) {
     callback(false);
     return () => {};
   }
   return onSnapshot(
-    doc(db, "admins", uid),
+    doc(firestore, "admins", uid),
     (snap) => callback(snap.exists()),
     (err) => {
       console.error("admin status subscription error:", err);

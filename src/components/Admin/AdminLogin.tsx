@@ -10,15 +10,23 @@ import { adminAuth } from "@/lib/firebase";
 import { getApiUrl } from "@/lib/api-base";
 import { GLASS_CLASS, SPRING_TRANSITION } from "@/lib/constants";
 
-async function establishAdminSession() {
-  const token = await adminAuth?.currentUser?.getIdToken();
-  if (!token) return;
-  await fetch(getApiUrl("/api/admin/session"), {
+async function establishAdminSession(getToken: () => Promise<string | undefined>) {
+  const token = await getToken();
+  if (!token) {
+    throw new Error("Admin session could not be started. Please try again.");
+  }
+
+  const res = await fetch(getApiUrl("/api/admin/session"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
     body: JSON.stringify({ idToken: token }),
   });
+
+  const data = (await res.json().catch(() => ({}))) as { error?: string };
+  if (!res.ok) {
+    throw new Error(data.error || "Could not establish admin session.");
+  }
 }
 
 export function AdminLogin() {
@@ -30,10 +38,17 @@ export function AdminLogin() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!adminAuth) {
+      showToast(
+        "Firebase is not configured on this site. Add NEXT_PUBLIC_FIREBASE_* environment variables.",
+        "error"
+      );
+      return;
+    }
     setLoading(true);
     try {
       await signIn(email, password);
-      await establishAdminSession();
+      await establishAdminSession(async () => adminAuth?.currentUser?.getIdToken());
     } catch (err) {
       showToast(getAuthErrorMessage(err), "error");
     } finally {

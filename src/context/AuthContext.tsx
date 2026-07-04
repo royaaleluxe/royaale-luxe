@@ -36,9 +36,9 @@ import {
 
 } from "firebase/auth";
 
-import { FirebaseError } from "firebase/app";
 import type { Auth } from "firebase/auth";
-import { storefrontAuth, db as storefrontDb } from "@/lib/firebase";
+import { FirebaseError } from "firebase/app";
+import { storefrontAuth, db as storefrontDb, adminDb } from "@/lib/firebase";
 
 import {
   createUserProfile,
@@ -143,6 +143,7 @@ export function AuthProvider({
 
 
   const isStorefront = authInstance === storefrontAuth;
+  const firestoreDb = isStorefront ? storefrontDb : adminDb;
 
   useEffect(() => {
     if (!user) return;
@@ -160,54 +161,62 @@ export function AuthProvider({
       }
     };
 
-    const unsubProfile = subscribeUserProfile(user.uid, async (p) => {
-      if (cancelled) return;
+    const unsubProfile = subscribeUserProfile(
+      user.uid,
+      async (p) => {
+        if (cancelled) return;
 
-      if (!p && !ensuringProfile.current) {
-        ensuringProfile.current = true;
-        try {
-          const name = user.displayName?.split(" ") || [];
-          p = await ensureUserProfile(user.uid, {
-            email: user.email || "",
-            firstName: name[0] || "Guest",
-            lastName: name.slice(1).join(" ") || "",
-            phoneNumber: "",
-          });
-        } catch (err) {
-          console.error("ensureUserProfile error:", err);
-        } finally {
-          ensuringProfile.current = false;
+        if (!p && !ensuringProfile.current) {
+          ensuringProfile.current = true;
+          try {
+            const name = user.displayName?.split(" ") || [];
+            p = await ensureUserProfile(user.uid, {
+              email: user.email || "",
+              firstName: name[0] || "Guest",
+              lastName: name.slice(1).join(" ") || "",
+              phoneNumber: "",
+            });
+          } catch (err) {
+            console.error("ensureUserProfile error:", err);
+          } finally {
+            ensuringProfile.current = false;
+          }
         }
-      }
 
-      if (isStorefront && p?.disabled) {
-        await firebaseSignOut(authInstance!);
-        setProfile(null);
+        if (isStorefront && p?.disabled) {
+          await firebaseSignOut(authInstance!);
+          setProfile(null);
+          profileReady = true;
+          adminReady = true;
+          setLoading(false);
+          return;
+        }
+
+        setProfile(p);
         profileReady = true;
-        adminReady = true;
-        setLoading(false);
-        return;
-      }
-
-      setProfile(p);
-      profileReady = true;
-      tryFinishLoading();
-    });
-
-    const unsubAdmin = subscribeIsAdmin(user.uid, (admin) => {
-      if (!cancelled) {
-        setAdminFlag(admin);
-        adminReady = true;
         tryFinishLoading();
-      }
-    });
+      },
+      firestoreDb
+    );
+
+    const unsubAdmin = subscribeIsAdmin(
+      user.uid,
+      (admin) => {
+        if (!cancelled) {
+          setAdminFlag(admin);
+          adminReady = true;
+          tryFinishLoading();
+        }
+      },
+      firestoreDb
+    );
 
     return () => {
       cancelled = true;
       unsubProfile();
       unsubAdmin();
     };
-  }, [user, authInstance, isStorefront]);
+  }, [user, authInstance, isStorefront, firestoreDb]);
 
 
 

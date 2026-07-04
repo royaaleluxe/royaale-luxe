@@ -17,6 +17,13 @@ export function getAuthErrorMessage(error: unknown): string {
         return "Too many attempts. Wait a few minutes, then try again.";
       case "auth/user-disabled":
         return "This account has been disabled. Contact support.";
+      case "auth/unauthorized-domain":
+        return "This site domain is not authorized for sign-in. Add it in Firebase Console → Authentication → Settings → Authorized domains.";
+      case "auth/network-request-failed":
+        return "Network error. Check your connection and try again.";
+      case "auth/invalid-api-key":
+      case "auth/api-key-not-valid.-please-pass-a-valid-api-key.":
+        return "Firebase is not configured correctly on this site. Check environment variables.";
       default:
         break;
     }
