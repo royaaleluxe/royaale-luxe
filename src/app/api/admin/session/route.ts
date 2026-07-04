@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth, getAdminFirestore } from "@/lib/firebase-admin";
+import { verifyAdminRequest } from "@/lib/server/auth";
 
 const COOKIE_NAME = "admin_session";
 const MAX_AGE = 60 * 60 * 12; // 12 hours
@@ -13,6 +14,14 @@ function sessionCookieOptions() {
     maxAge: MAX_AGE,
     path: "/",
   };
+}
+
+export async function GET(request: Request) {
+  const admin = await verifyAdminRequest(request);
+  if (!admin) {
+    return NextResponse.json({ isAdmin: false, error: "Not an admin" }, { status: 403 });
+  }
+  return NextResponse.json({ isAdmin: true, uid: admin.uid, email: admin.email ?? null });
 }
 
 export async function POST(request: Request) {
@@ -34,7 +43,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Not an admin" }, { status: 403 });
     }
 
-    const response = NextResponse.json({ success: true });
+    const response = NextResponse.json({
+      success: true,
+      uid: decoded.uid,
+      email: decoded.email ?? null,
+    });
     response.cookies.set(COOKIE_NAME, idToken, sessionCookieOptions());
     return response;
   } catch (error) {

@@ -10,6 +10,26 @@ import { adminAuth } from "@/lib/firebase";
 import { getApiUrl } from "@/lib/api-base";
 import { GLASS_CLASS, SPRING_TRANSITION } from "@/lib/constants";
 
+function sessionErrorMessage(status: number, error?: string): string {
+  if (error === "Not an admin") {
+    return "This account is not authorized for admin access. Add your UID to the admins collection in Firestore.";
+  }
+  if (error === "Admin SDK not configured") {
+    return "Server admin credentials are missing. Add FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT_JSON.";
+  }
+  if (error === "Invalid token") {
+    return "Sign-in token was rejected. Sign out, refresh, and try again.";
+  }
+  if (error) return error;
+  if (status === 403) {
+    return "This account is not authorized for admin access. Add your UID to the admins collection in Firestore.";
+  }
+  if (status === 503) {
+    return "Server admin credentials are missing. Add FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT_JSON.";
+  }
+  return "Could not establish admin session. Check the server logs and try again.";
+}
+
 async function establishAdminSession(getToken: () => Promise<string | undefined>) {
   const token = await getToken();
   if (!token) {
@@ -25,12 +45,12 @@ async function establishAdminSession(getToken: () => Promise<string | undefined>
 
   const data = (await res.json().catch(() => ({}))) as { error?: string };
   if (!res.ok) {
-    throw new Error(data.error || "Could not establish admin session.");
+    throw new Error(sessionErrorMessage(res.status, data.error));
   }
 }
 
 export function AdminLogin() {
-  const { signIn } = useAuth();
+  const { signIn, signOut } = useAuth();
   const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,9 +67,10 @@ export function AdminLogin() {
     }
     setLoading(true);
     try {
-      await signIn(email, password);
-      await establishAdminSession(async () => adminAuth?.currentUser?.getIdToken());
+      const signedInUser = await signIn(email, password);
+      await establishAdminSession(() => signedInUser.getIdToken());
     } catch (err) {
+      await signOut().catch(() => {});
       showToast(getAuthErrorMessage(err), "error");
     } finally {
       setLoading(false);

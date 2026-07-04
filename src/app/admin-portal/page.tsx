@@ -9,7 +9,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 
 import { useAuth } from "@/context/AuthContext";
-import { useToast } from "@/context/ToastContext";
 
 import { AdminLogin, clearAdminSession } from "@/components/Admin/AdminLogin";
 import { getApiUrl } from "@/lib/api-base";
@@ -86,7 +85,6 @@ type TabId = (typeof tabs)[number]["id"];
 export default function AdminPortalPage() {
 
   const { user, loading, isAdmin, signOut } = useAuth();
-  const { showToast } = useToast();
 
   const router = useRouter();
 
@@ -104,12 +102,6 @@ export default function AdminPortalPage() {
       ).catch(() => {});
     }
   }, [user, isAdmin]);
-
-  useEffect(() => {
-    if (user && !loading && !isAdmin) {
-      showToast("You are not authorized to access the admin portal.", "error");
-    }
-  }, [user, loading, isAdmin, showToast]);
 
   if (loading) {
     return (

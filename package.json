@@ -12,6 +12,7 @@
     "lint": "next lint",
     "firebase:check": "node scripts/check-firebase.mjs",
     "firebase:seed": "node scripts/seed-firestore.mjs",
+    "firebase:grant-admin": "node scripts/grant-admin.mjs",
     "resend:setup": "node scripts/setup-resend.mjs setup",
     "resend:verify": "node scripts/setup-resend.mjs verify",
     "resend:test": "node scripts/setup-resend.mjs test"

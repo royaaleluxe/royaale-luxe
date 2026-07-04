@@ -588,10 +588,11 @@ export async function createUserProfile(profile: UserProfile): Promise<void> {
 
 export async function ensureUserProfile(
   uid: string,
-  defaults: Pick<UserProfile, "email" | "firstName" | "lastName" | "phoneNumber">
+  defaults: Pick<UserProfile, "email" | "firstName" | "lastName" | "phoneNumber">,
+  firestore: Firestore | null = db
 ): Promise<UserProfile> {
-  if (!db) throw new Error("Firebase not configured");
-  const ref = doc(db, "users", uid);
+  if (!firestore) throw new Error("Firebase not configured");
+  const ref = doc(firestore, "users", uid);
   const snap = await getDoc(ref);
   if (snap.exists()) return snap.data() as UserProfile;
   const profile: UserProfile = {

@@ -18,10 +18,6 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       bindFirestore(adminDb);
       boundRef.current = true;
     }
-    return () => {
-      bindFirestore(null);
-      boundRef.current = false;
-    };
   }, []);
 
   return <AuthProvider authInstance={adminAuth}>{children}</AuthProvider>;

@@ -39,6 +39,7 @@ import {
 import type { Auth } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { storefrontAuth, db as storefrontDb, adminDb } from "@/lib/firebase";
+import { getApiUrl } from "@/lib/api-base";
 
 import {
   createUserProfile,
@@ -62,7 +63,7 @@ interface AuthContextValue {
 
   isAdmin: boolean;
 
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<User>;
 
   signUp: (data: {
 
@@ -170,12 +171,16 @@ export function AuthProvider({
           ensuringProfile.current = true;
           try {
             const name = user.displayName?.split(" ") || [];
-            p = await ensureUserProfile(user.uid, {
-              email: user.email || "",
-              firstName: name[0] || "Guest",
-              lastName: name.slice(1).join(" ") || "",
-              phoneNumber: "",
-            });
+            p = await ensureUserProfile(
+              user.uid,
+              {
+                email: user.email || "",
+                firstName: name[0] || "Guest",
+                lastName: name.slice(1).join(" ") || "",
+                phoneNumber: "",
+              },
+              firestoreDb
+            );
           } catch (err) {
             console.error("ensureUserProfile error:", err);
           } finally {
@@ -199,17 +204,44 @@ export function AuthProvider({
       firestoreDb
     );
 
-    const unsubAdmin = subscribeIsAdmin(
-      user.uid,
-      (admin) => {
-        if (!cancelled) {
-          setAdminFlag(admin);
+    let unsubAdmin = () => {};
+
+    if (isStorefront) {
+      unsubAdmin = subscribeIsAdmin(
+        user.uid,
+        (admin) => {
+          if (!cancelled) {
+            setAdminFlag(admin);
+            adminReady = true;
+            tryFinishLoading();
+          }
+        },
+        firestoreDb
+      );
+    } else {
+      user
+        .getIdToken()
+        .then((token) =>
+          fetch(getApiUrl("/api/admin/session"), {
+            headers: { Authorization: `Bearer ${token}` },
+            credentials: "include",
+          })
+        )
+        .then((res) => {
+          if (cancelled) return;
+          setAdminFlag(res.ok);
           adminReady = true;
           tryFinishLoading();
-        }
-      },
-      firestoreDb
-    );
+        })
+        .catch((err) => {
+          console.error("admin access verification error:", err);
+          if (!cancelled) {
+            setAdminFlag(false);
+            adminReady = true;
+            tryFinishLoading();
+          }
+        });
+    }
 
     return () => {
       cancelled = true;
@@ -220,7 +252,7 @@ export function AuthProvider({
 
 
 
-  const signIn = useCallback(async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string): Promise<User> => {
 
     if (!authInstance) throw new Error("Authentication unavailable.");
 
@@ -241,6 +273,8 @@ export function AuthProvider({
         throw new Error("This account has been disabled. Contact support.");
       }
     }
+
+    return cred.user;
 
   }, [authInstance, isStorefront]);
 
