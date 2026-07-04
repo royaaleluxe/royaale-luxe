@@ -12,6 +12,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 
 import { AdminLogin, clearAdminSession } from "@/components/Admin/AdminLogin";
+import { getApiUrl } from "@/lib/api-base";
 import { adminAuth } from "@/lib/firebase";
 
 import { AdminDashboard } from "@/components/Admin/AdminDashboard";
@@ -94,9 +95,10 @@ export default function AdminPortalPage() {
   useEffect(() => {
     if (user && isAdmin && adminAuth?.currentUser) {
       adminAuth.currentUser.getIdToken().then((token) =>
-        fetch("/api/admin/session", {
+        fetch(getApiUrl("/api/admin/session"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
+          credentials: "include",
           body: JSON.stringify({ idToken: token }),
         })
       ).catch(() => {});

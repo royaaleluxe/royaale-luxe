@@ -1,0 +1,9 @@
+# Shared by both Netlify sites from this repo.
+# Storefront site: no extra env needed.
+# Admin site: add SITE_ROLE=admin in Netlify env vars, then redeploy (clear cache).
+
+[build]
+  command = "npm run build"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

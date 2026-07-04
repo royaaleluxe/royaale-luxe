@@ -22,17 +22,27 @@ const playfair = Playfair_Display({
   style: ["italic", "normal"],
 });
 
-export const metadata: Metadata = {
-  title: "Royaale Luxe | Premium Saint Lucia Fashion",
-  description:
-    "Ultra-luxurious premium clothing brand based in Saint Lucia. Island elegance meets couture refinement.",
-  manifest: "/manifest.json",
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Royaale Luxe",
-  },
-};
+export function generateMetadata(): Metadata {
+  if (process.env.NEXT_PUBLIC_SITE_MODE === "admin") {
+    return {
+      title: "Royaale Admin",
+      description: "Royaale Luxe administration portal",
+      robots: { index: false, follow: false },
+    };
+  }
+
+  return {
+    title: "Royaale Luxe | Premium Saint Lucia Fashion",
+    description:
+      "Ultra-luxurious premium clothing brand based in Saint Lucia. Island elegance meets couture refinement.",
+    manifest: "/manifest.json",
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: "Royaale Luxe",
+    },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#f9a8d4",

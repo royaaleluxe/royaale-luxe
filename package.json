@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:next": "next dev",
-    "build": "next build",
+    "build": "node scripts/netlify-build.mjs",
+    "build:storefront": "next build",
+    "build:admin": "node scripts/netlify-build.mjs --admin",
     "start": "next start",
     "lint": "next lint",
     "firebase:check": "node scripts/check-firebase.mjs",
@@ -27,6 +29,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@netlify/plugin-nextjs": "^5.11.4",
     "@types/node": "^20.17.30",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.6",

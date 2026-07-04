@@ -7,14 +7,16 @@ import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { getAuthErrorMessage } from "@/lib/auth-errors";
 import { adminAuth } from "@/lib/firebase";
+import { getApiUrl } from "@/lib/api-base";
 import { GLASS_CLASS, SPRING_TRANSITION } from "@/lib/constants";
 
 async function establishAdminSession() {
   const token = await adminAuth?.currentUser?.getIdToken();
   if (!token) return;
-  await fetch("/api/admin/session", {
+  await fetch(getApiUrl("/api/admin/session"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({ idToken: token }),
   });
 }
@@ -89,5 +91,8 @@ export function AdminLogin() {
 }
 
 export async function clearAdminSession() {
-  await fetch("/api/admin/session", { method: "DELETE" });
+  await fetch(getApiUrl("/api/admin/session"), {
+    method: "DELETE",
+    credentials: "include",
+  });
 }

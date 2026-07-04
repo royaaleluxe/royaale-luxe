@@ -4,6 +4,17 @@ import { getAdminAuth, getAdminFirestore } from "@/lib/firebase-admin";
 const COOKIE_NAME = "admin_session";
 const MAX_AGE = 60 * 60 * 12; // 12 hours
 
+function sessionCookieOptions() {
+  const crossOrigin = Boolean(process.env.ALLOWED_ORIGINS?.trim());
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: crossOrigin ? ("none" as const) : ("strict" as const),
+    maxAge: MAX_AGE,
+    path: "/",
+  };
+}
+
 export async function POST(request: Request) {
   try {
     const { idToken } = (await request.json()) as { idToken?: string };
@@ -24,13 +35,7 @@ export async function POST(request: Request) {
     }
 
     const response = NextResponse.json({ success: true });
-    response.cookies.set(COOKIE_NAME, idToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: MAX_AGE,
-      path: "/",
-    });
+    response.cookies.set(COOKIE_NAME, idToken, sessionCookieOptions());
     return response;
   } catch (error) {
     console.error("admin session error:", error);

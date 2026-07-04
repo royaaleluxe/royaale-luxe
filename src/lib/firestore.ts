@@ -16,6 +16,7 @@ import {
   type Unsubscribe,
 } from "firebase/firestore";
 import { db as storefrontDb } from "./firebase";
+import { getApiUrl } from "./api-base";
 import type { Firestore } from "firebase/firestore";
 import { normalizeImageUrl } from "./images";
 import type {
@@ -772,7 +773,7 @@ export async function setUserDisabled(
     throw new Error("Admin session expired. Sign in again.");
   }
 
-  const res = await fetch("/api/admin/users/disable", {
+  const res = await fetch(getApiUrl("/api/admin/users/disable"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

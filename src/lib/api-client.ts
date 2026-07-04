@@ -1,3 +1,4 @@
+import { getApiUrl } from "@/lib/api-base";
 import { storefrontAuth } from "@/lib/firebase";
 
 export class ApiError extends Error {
@@ -32,7 +33,7 @@ export async function apiFetch<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(path, { ...init, headers });
+  const res = await fetch(getApiUrl(path), { ...init, headers });
   const data = (await res.json().catch(() => ({}))) as T & { error?: string };
 
   if (!res.ok) {
@@ -111,7 +112,7 @@ export async function adminApiFetch<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  const res = await fetch(path, {
+  const res = await fetch(getApiUrl(path), {
     ...options,
     headers,
     credentials: "include",
