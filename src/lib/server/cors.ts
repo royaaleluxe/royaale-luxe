@@ -15,7 +15,7 @@ function configuredOrigins(): string[] {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
   if (appUrl) origins.add(appUrl);
 
-  return [...origins];
+  return Array.from(origins);
 }
 
 function allowedOrigins(): string[] {

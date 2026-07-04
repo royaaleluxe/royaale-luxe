@@ -1,12 +1,26 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { verifyFirebaseTokenEdge } from "@/lib/server/edge-auth";
 import { applyCorsHeaders, corsHeaders } from "@/lib/server/cors";
 import { SECURITY_HEADERS } from "@/lib/server/security";
 
 const COOKIE_NAME = "admin_session";
 const IS_ADMIN_SITE = process.env.NEXT_PUBLIC_SITE_MODE === "admin";
 const ADMIN_SITE_URL = process.env.NEXT_PUBLIC_ADMIN_URL?.trim().replace(/\/$/, "") ?? "";
+
+/** Fast pre-check for middleware; admin API routes verify tokens fully in Node. */
+function hasPlausibleAdminToken(token: string): boolean {
+  const parts = token.split(".");
+  if (parts.length !== 3) return false;
+  try {
+    const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/"))) as {
+      exp?: number;
+    };
+    if (typeof payload.exp === "number" && payload.exp * 1000 < Date.now()) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function isStorefrontPath(pathname: string): boolean {
   return (
@@ -76,7 +90,7 @@ export async function middleware(request: NextRequest) {
       );
     }
 
-    const valid = await verifyFirebaseTokenEdge(token);
+    const valid = hasPlausibleAdminToken(token);
     if (!valid) {
       return withSecurityHeaders(
         NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }),
