@@ -1,4 +1,5 @@
 import { formatCurrency } from "@/lib/constants";
+import { notifyAdminNewOrderTelegram } from "./telegram";
 
 export interface WebhookPayload {
   event: "new_order" | "order_cancelled" | "low_stock";
@@ -49,14 +50,17 @@ export async function notifyAdminNewOrder(params: {
   userEmail: string;
   total: number;
 }): Promise<void> {
-  await dispatchWebhook({
-    event: "new_order",
-    orderId: params.orderId,
-    firestoreOrderId: params.firestoreOrderId,
-    userName: params.userName,
-    userEmail: params.userEmail,
-    total: params.total,
-    message: `New order #${params.orderId} from ${params.userName} — ${formatCurrency(params.total)}`,
-    timestamp: new Date().toISOString(),
-  });
+  await Promise.all([
+    dispatchWebhook({
+      event: "new_order",
+      orderId: params.orderId,
+      firestoreOrderId: params.firestoreOrderId,
+      userName: params.userName,
+      userEmail: params.userEmail,
+      total: params.total,
+      message: `New order #${params.orderId} from ${params.userName} — ${formatCurrency(params.total)}`,
+      timestamp: new Date().toISOString(),
+    }),
+    notifyAdminNewOrderTelegram(params),
+  ]);
 }

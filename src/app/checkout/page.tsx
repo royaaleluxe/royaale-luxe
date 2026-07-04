@@ -26,6 +26,7 @@ import {
   type District,
 } from "@/lib/constants";
 import type { SavedAddress } from "@/lib/types";
+import { EmailVerificationBanner } from "@/components/Elements/EmailVerificationBanner";
 import { updateEmail } from "firebase/auth";
 import { storefrontAuth } from "@/lib/firebase";
 
@@ -127,6 +128,11 @@ export default function CheckoutPage() {
       showToast("Your account has been disabled. Contact support.", "error");
       return;
     }
+    const isGoogleUser = user.providerData.some((p) => p.providerId === "google.com");
+    if (!isGoogleUser && !user.emailVerified) {
+      showToast("Please verify your email before placing an order", "error");
+      return;
+    }
     if (items.length === 0) {
       showToast("Your cart is empty", "error");
       return;
@@ -218,6 +224,8 @@ export default function CheckoutPage() {
       >
         Luxury Checkout
       </motion.h1>
+
+      <EmailVerificationBanner />
 
       <form onSubmit={handleSubmit} className="grid lg:grid-cols-2 gap-10">
         <motion.div

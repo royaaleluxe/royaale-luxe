@@ -11,6 +11,7 @@ import { useToast } from "@/context/ToastContext";
 import { fetchOrdersForUser, updateUserProfile, saveUserAddresses } from "@/lib/firestore";
 import { formatCurrency, GLASS_CLASS, SPRING_TRANSITION, ORDER_STATUS_CONFIG, SAINT_LUCIA_DISTRICTS, type District } from "@/lib/constants";
 import type { Order, SavedAddress } from "@/lib/types";
+import { EmailVerificationBanner } from "@/components/Elements/EmailVerificationBanner";
 import { updateEmail } from "firebase/auth";
 import { storefrontAuth } from "@/lib/firebase";
 
@@ -211,6 +212,8 @@ function AccountContent() {
       </Link>
 
       <h1 className="font-display text-3xl font-bold italic mb-6">My Account</h1>
+
+      <EmailVerificationBanner />
 
       <div className="flex flex-wrap gap-2 mb-6">
         <button

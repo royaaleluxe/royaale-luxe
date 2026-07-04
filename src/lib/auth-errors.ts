@@ -21,6 +21,12 @@ export function getAuthErrorMessage(error: unknown): string {
         return "This site domain is not authorized for sign-in. Add it in Firebase Console → Authentication → Settings → Authorized domains.";
       case "auth/network-request-failed":
         return "Network error. Check your connection and try again.";
+      case "auth/popup-closed-by-user":
+        return "Sign-in was cancelled. Please try again.";
+      case "auth/popup-blocked":
+        return "Pop-up was blocked. Allow pop-ups for this site and try again.";
+      case "auth/account-exists-with-different-credential":
+        return "An account already exists with this email. Sign in with your original method.";
       case "auth/invalid-api-key":
       case "auth/api-key-not-valid.-please-pass-a-valid-api-key.":
         return "Firebase is not configured correctly on this site. Check environment variables.";

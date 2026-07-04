@@ -1,14 +1,15 @@
 import type { Firestore } from "firebase-admin/firestore";
-import { getAdminFirestore } from "@/lib/firebase-admin";
+import { getAdminFirestore, getAdminAuth } from "@/lib/firebase-admin";
 import { buildVariantRestores, buildVariantUpdates } from "@/lib/orders";
 import { getStockForVariant } from "@/lib/products";
 import { validatePromoCode, calculateDiscount } from "@/lib/promos";
 import { formatCurrency, generateOrderId, SAINT_LUCIA_DISTRICTS } from "@/lib/constants";
 import type { CartItem, DistrictFee, Order, Product, PromoCode, SiteSettings, UserProfile } from "@/lib/types";
 import type { CreateOrderInput } from "./validation";
-import { sendEmail } from "./email/send";
+import { sendOrderEmail, sendEmail } from "./email/send";
 import { orderConfirmationEmail, orderCancelledEmail, backInStockEmail } from "./email/templates";
 import { notifyAdminNewOrder } from "./webhook";
+import { notifyAdminOrderCancelledTelegram } from "./telegram";
 
 function stripUndefined<T extends Record<string, unknown>>(obj: T): T {
   const out = { ...obj };
@@ -76,6 +77,20 @@ export async function createOrderServer(
 ): Promise<CreateOrderResult> {
   const adminDb = getAdminFirestore();
   if (!adminDb) throw new Error("Server not configured");
+
+  const adminAuth = getAdminAuth();
+  if (adminAuth) {
+    try {
+      const authUser = await adminAuth.getUser(userId);
+      const isGoogle = authUser.providerData.some((p) => p.providerId === "google.com");
+      if (!isGoogle && !authUser.emailVerified) {
+        throw new Error("Please verify your email before placing an order.");
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message.includes("verify your email")) throw err;
+      // Continue if auth lookup fails for other reasons
+    }
+  }
 
   const userSnap = await adminDb.collection("users").doc(userId).get();
   if (userSnap.exists && userSnap.data()?.disabled === true) {
@@ -230,7 +245,7 @@ export async function createOrderServer(
     formatCurrency,
   });
 
-  sendEmail({ to: input.email, ...emailTemplate }).catch(() => {});
+  sendOrderEmail({ to: input.email, ...emailTemplate }).catch(() => {});
 
   notifyAdminNewOrder({
     orderId,
@@ -311,7 +326,13 @@ export async function cancelOrderServer(
     orderId: order.orderId,
     accountUrl: `${getAppUrl()}/account?tab=orders`,
   });
-  sendEmail({ to: order.userEmail, ...cancelEmail }).catch(() => {});
+  sendOrderEmail({ to: order.userEmail, ...cancelEmail }).catch(() => {});
+
+  notifyAdminOrderCancelledTelegram({
+    orderId: order.orderId,
+    userName: order.userName,
+    userEmail: order.userEmail,
+  }).catch(() => {});
 
   for (const item of order.items) {
     processBackInStockForProduct(item.productId).catch(() => {});

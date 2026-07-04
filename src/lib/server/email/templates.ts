@@ -147,6 +147,25 @@ export function backInStockEmail(params: {
   };
 }
 
+export function welcomeEmail(params: {
+  firstName: string;
+  accountUrl: string;
+}): { subject: string; html: string } {
+  const body = `
+    <h1 style="margin:0 0 8px;font-family:Georgia,serif;font-size:26px;font-style:italic;font-weight:normal;">Welcome, ${escapeHtml(params.firstName)}</h1>
+    <p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:${BRAND.muted};">Thank you for joining Royaale Luxe. Please verify your email address using the link we sent separately — once confirmed, you&apos;re all set to shop island luxury.</p>
+    <div style="background:${BRAND.pink};border-radius:16px;padding:20px 24px;margin-bottom:8px;border:1px solid ${BRAND.pinkAccent};">
+      <p style="margin:0 0 8px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;">What&apos;s next</p>
+      <p style="margin:0;font-size:14px;line-height:1.6;color:${BRAND.muted};">Browse our collections, save favourites to your wishlist, and enjoy seamless checkout across Saint Lucia.</p>
+    </div>
+    ${primaryButton(params.accountUrl, "Explore Your Account")}`;
+
+  return {
+    subject: "Welcome to Royaale Luxe",
+    html: emailShell("Welcome", body),
+  };
+}
+
 export function orderCancelledEmail(params: {
   customerName: string;
   orderId: string;

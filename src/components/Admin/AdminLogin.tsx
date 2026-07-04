@@ -6,6 +6,7 @@ import { Lock } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/context/ToastContext";
 import { getAuthErrorMessage } from "@/lib/auth-errors";
+import { PasswordInput } from "@/components/Forms/PasswordInput";
 import { adminAuth } from "@/lib/firebase";
 import { getApiUrl } from "@/lib/api-base";
 import { GLASS_CLASS, SPRING_TRANSITION } from "@/lib/constants";
@@ -61,9 +62,8 @@ export function AdminLogin() {
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-3 rounded-xl bg-white/70 border border-brand-pink-accent/40 text-sm focus:outline-none focus:ring-2 focus:ring-brand-pink-accent"
           />
-          <input
+          <PasswordInput
             required
-            type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
