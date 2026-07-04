@@ -5,10 +5,18 @@ import { getAuth, type Auth } from "firebase-admin/auth";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 
 function parseServiceAccountJson(raw: string): Record<string, unknown> | null {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+
   try {
-    return JSON.parse(raw) as Record<string, unknown>;
+    return JSON.parse(trimmed) as Record<string, unknown>;
   } catch {
-    return null;
+    // Netlify env vars are sometimes pasted with escaped newlines in private_key.
+    try {
+      return JSON.parse(trimmed.replace(/\\n/g, "\n")) as Record<string, unknown>;
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -54,11 +62,16 @@ export function getAdminApp(): App | null {
     (serviceAccount.project_id as string | undefined) ||
     process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 
-  adminApp = initializeApp({
-    credential: cert(serviceAccount),
-    ...(projectId ? { projectId } : {}),
-  });
-  return adminApp;
+  try {
+    adminApp = initializeApp({
+      credential: cert(serviceAccount),
+      ...(projectId ? { projectId } : {}),
+    });
+    return adminApp;
+  } catch (error) {
+    console.error("Firebase Admin SDK initialization failed:", error);
+    return null;
+  }
 }
 
 export function getAdminAuth(): Auth | null {

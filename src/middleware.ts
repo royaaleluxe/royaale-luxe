@@ -18,9 +18,14 @@ function isStorefrontPath(pathname: string): boolean {
 
 function withSecurityHeaders(
   response: NextResponse,
-  requestOrigin: string | null
+  requestOrigin: string | null,
+  pathname?: string
 ): NextResponse {
   for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
+    if (key === "Cross-Origin-Resource-Policy" && pathname?.startsWith("/api")) {
+      response.headers.set(key, "cross-origin");
+      continue;
+    }
     response.headers.set(key, value);
   }
   for (const [key, value] of Object.entries(corsHeaders(requestOrigin))) {
@@ -53,7 +58,7 @@ export async function middleware(request: NextRequest) {
 
   if (pathname.startsWith("/api")) {
     if (request.method === "OPTIONS") {
-      return withSecurityHeaders(new NextResponse(null, { status: 204 }), requestOrigin);
+      return withSecurityHeaders(new NextResponse(null, { status: 204 }), requestOrigin, pathname);
     }
   }
 
@@ -66,7 +71,8 @@ export async function middleware(request: NextRequest) {
     if (!token) {
       return withSecurityHeaders(
         NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
-        requestOrigin
+        requestOrigin,
+        pathname
       );
     }
 
@@ -74,7 +80,8 @@ export async function middleware(request: NextRequest) {
     if (!valid) {
       return withSecurityHeaders(
         NextResponse.json({ error: "Invalid or expired session" }, { status: 401 }),
-        requestOrigin
+        requestOrigin,
+        pathname
       );
     }
   }
@@ -83,7 +90,7 @@ export async function middleware(request: NextRequest) {
   if (pathname.startsWith("/api")) {
     applyCorsHeaders(response, requestOrigin);
   }
-  return withSecurityHeaders(response, requestOrigin);
+  return withSecurityHeaders(response, requestOrigin, pathname);
 }
 
 export const config = {

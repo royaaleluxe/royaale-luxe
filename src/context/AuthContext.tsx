@@ -39,7 +39,6 @@ import {
 import type { Auth } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import { storefrontAuth, db as storefrontDb, adminDb } from "@/lib/firebase";
-import { getApiUrl } from "@/lib/api-base";
 
 import {
   createUserProfile,
@@ -206,42 +205,17 @@ export function AuthProvider({
 
     let unsubAdmin = () => {};
 
-    if (isStorefront) {
-      unsubAdmin = subscribeIsAdmin(
-        user.uid,
-        (admin) => {
-          if (!cancelled) {
-            setAdminFlag(admin);
-            adminReady = true;
-            tryFinishLoading();
-          }
-        },
-        firestoreDb
-      );
-    } else {
-      user
-        .getIdToken()
-        .then((token) =>
-          fetch(getApiUrl("/api/admin/session"), {
-            headers: { Authorization: `Bearer ${token}` },
-            credentials: "include",
-          })
-        )
-        .then((res) => {
-          if (cancelled) return;
-          setAdminFlag(res.ok);
+    unsubAdmin = subscribeIsAdmin(
+      user.uid,
+      (admin) => {
+        if (!cancelled) {
+          setAdminFlag(admin);
           adminReady = true;
           tryFinishLoading();
-        })
-        .catch((err) => {
-          console.error("admin access verification error:", err);
-          if (!cancelled) {
-            setAdminFlag(false);
-            adminReady = true;
-            tryFinishLoading();
-          }
-        });
-    }
+        }
+      },
+      firestoreDb
+    );
 
     return () => {
       cancelled = true;

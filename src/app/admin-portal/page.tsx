@@ -142,11 +142,21 @@ export default function AdminPortalPage() {
 
           <p className="text-sm text-brand-muted">
 
-            This account is not authorized for the admin portal. In Firestore, add a document to the{" "}
+            Your account could not be verified as an admin. If you were recently added to the{" "}
 
-            <code className="text-xs bg-white/60 px-1 rounded">admins</code> collection using your
+            <code className="text-xs bg-white/60 px-1 rounded">admins</code> collection, sign out and
 
-            user UID as the document ID (not your email).
+            try again. Otherwise ask an existing admin to grant access using your UID below.
+
+          </p>
+
+          <p className="text-xs text-brand-muted">
+
+            If your UID is already in Firestore, deploy{" "}
+
+            <code className="text-xs bg-white/60 px-1 rounded">firestore.rules</code> from this repo
+
+            (Firebase Console → Firestore → Rules → Publish).
 
           </p>
 

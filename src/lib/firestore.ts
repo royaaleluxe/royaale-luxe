@@ -672,12 +672,24 @@ export function subscribeIsAdmin(
     callback(false);
     return () => {};
   }
+
+  const ref = doc(firestore, "admins", uid);
+
+  const readOnce = () => {
+    getDoc(ref)
+      .then((snap) => callback(snap.exists()))
+      .catch((err) => {
+        console.error("admin status lookup error:", err);
+        callback(false);
+      });
+  };
+
   return onSnapshot(
-    doc(firestore, "admins", uid),
+    ref,
     (snap) => callback(snap.exists()),
     (err) => {
       console.error("admin status subscription error:", err);
-      callback(false);
+      readOnce();
     }
   );
 }

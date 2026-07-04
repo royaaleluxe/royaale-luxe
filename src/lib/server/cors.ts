@@ -1,11 +1,25 @@
 const DEFAULT_METHODS = "GET, POST, PUT, PATCH, DELETE, OPTIONS";
 const DEFAULT_HEADERS = "Content-Type, Authorization";
 
+function configuredOrigins(): string[] {
+  const origins = new Set<string>();
+
+  for (const origin of (process.env.ALLOWED_ORIGINS ?? "").split(",")) {
+    const trimmed = origin.trim();
+    if (trimmed) origins.add(trimmed);
+  }
+
+  const adminUrl = process.env.NEXT_PUBLIC_ADMIN_URL?.trim().replace(/\/$/, "");
+  if (adminUrl) origins.add(adminUrl);
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "");
+  if (appUrl) origins.add(appUrl);
+
+  return [...origins];
+}
+
 function allowedOrigins(): string[] {
-  return (process.env.ALLOWED_ORIGINS ?? "")
-    .split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean);
+  return configuredOrigins();
 }
 
 export function resolveCorsOrigin(requestOrigin: string | null): string | null {
